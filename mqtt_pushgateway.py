@@ -20,6 +20,7 @@ from datetime import datetime, timedelta
 with open("config.toml") as fd:
     config = pytoml.load(fd)
 
+
 class Topic(object):
     def __init__(self):
         self.metric = None
@@ -127,7 +128,7 @@ def on_message(client, userdata, message):
         payload = message.payload.decode("utf-8")
     except:
         logging.warning("Payload for '%s' is not valid utf-8, ignored" %
-              topic, exc_info=True)
+                        topic, exc_info=True)
     else:
         payload = payload.strip()
         logging.info(f"Message received: {topic} => {payload}")
@@ -149,17 +150,19 @@ def on_message(client, userdata, message):
     except:
         logging.warning("Metric update for '%s' failed" % topic, exc_info=True)
 
+
 def main():
     client = mqtt.Client(config["mqtt"]["client_id"] % dict(
         hostname=socket.gethostname()
     ))
 
     if "username" in config["mqtt"]:
-        client.username_pw_set(config["mqtt"]["username"], config["mqtt"]["password"])
-    
+        client.username_pw_set(
+            config["mqtt"]["username"], config["mqtt"]["password"])
+
     logging.basicConfig(level=logging.INFO)
 
-    client.on_message = on_message    
+    client.on_message = on_message
 
     def on_connect(client, userdata, flags, result):
         logging.info("subscribing")
@@ -171,6 +174,7 @@ def main():
     client.connect(config["mqtt"]["broker"], port=config["mqtt"]["port"])
 
     client.loop_forever()
+
 
 if __name__ == '__main__':
     main()
