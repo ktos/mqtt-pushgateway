@@ -152,7 +152,10 @@ def main():
     client = mqtt.Client(config["mqtt"]["client_id"] % dict(
         hostname=socket.gethostname()
     ))
-    #client.username_pw_set(config["mqtt"]["username"], config["mqtt"]["password"])
+
+    if "username" in config["mqtt"]:
+        client.username_pw_set(config["mqtt"]["username"], config["mqtt"]["password"])
+        
     client.on_message = on_message
 
     def on_connect(client, userdata, flags, result):

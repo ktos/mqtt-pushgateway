@@ -23,6 +23,11 @@ subscribe = [
 # Comment to disable.
 expire = 300
 
+# Configure your Prometheus pushgateway here
+[pushgw]
+address = "http://example.com" # pushgateway HTTP address
+username = "user"
+password = "pass"
 
 [[topic]]
 # You can configure a regular expression to match the topic name against.
