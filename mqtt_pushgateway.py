@@ -67,10 +67,12 @@ class Topic(object):
 
         self.last_update = datetime.now()
 
-        print(str(self))
+        logging.debug(str(self))
+        logging.info("Sending request")
         response = requests.post(f'{config["pushgw"]["address"]}/metrics/job/{self.metric}', data=str(
             self), auth=(config["pushgw"]["username"], config["pushgw"]["password"]))
-        response.raise_for_status()
+        if response.status_code != 200:
+            logging.error(f"Request failed with code {response.status_code}")
 
     @property
     def forget(self):
@@ -124,11 +126,11 @@ def on_message(client, userdata, message):
     try:
         payload = message.payload.decode("utf-8")
     except:
-        print("Payload for '%s' is not valid utf-8, ignored" %
+        logging.warning("Payload for '%s' is not valid utf-8, ignored" %
               topic, exc_info=True)
     else:
         payload = payload.strip()
-        print(f"Message received: {topic} => {payload}")
+        logging.info(f"Message received: {topic} => {payload}")
 
     if payload[0] == "{" and payload[-1] == "}":
         try:
@@ -145,8 +147,7 @@ def on_message(client, userdata, message):
     try:
         metrics[topic].update(topic, payload)
     except:
-        print("Metric update for '%s' failed" % topic, exc_info=True)
-
+        logging.warning("Metric update for '%s' failed" % topic, exc_info=True)
 
 def main():
     client = mqtt.Client(config["mqtt"]["client_id"] % dict(
@@ -155,26 +156,21 @@ def main():
 
     if "username" in config["mqtt"]:
         client.username_pw_set(config["mqtt"]["username"], config["mqtt"]["password"])
-        
-    client.on_message = on_message
+    
+    logging.basicConfig(level=logging.INFO)
+
+    client.on_message = on_message    
 
     def on_connect(client, userdata, flags, result):
-        print("subscribing")
+        logging.info("subscribing")
         for topic in config["mqtt"]["subscribe"]:
-            print(topic)
+            logging.debug(topic)
             client.subscribe(topic)
 
     client.on_connect = on_connect
     client.connect(config["mqtt"]["broker"], port=config["mqtt"]["port"])
 
     client.loop_forever()
-
-    # client.disconnect()
-    # client.loop_stop()
-
-    # while True:
-    # pass
-
 
 if __name__ == '__main__':
     main()
